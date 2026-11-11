@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Sugar Shack Slide</title>
+<meta name="description" content="A sliding number-tile puzzle starring maple-sugaring characters.">
+<meta name="theme-color" content="#1c2f36">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sugar Shack">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="bg"></canvas>
+
+  <!-- TITLE -->
+  <section id="title" class="screen">
+    <div class="title-inner">
+      <h1 class="logo" aria-label="Sugar Shack Slide">
+        <span class="l1">SUGAR SHACK</span>
+        <span class="l2"><i class="drop"></i>SLIDE<i class="drop r"></i></span>
+      </h1>
+      <p class="tagline">A sliding number-tile puzzle</p>
+      <canvas id="parade" aria-hidden="true"></canvas>
+      <div id="friends" class="friends"></div>
+      <div class="menu">
+        <button id="btnShack" class="big"><span class="bt">Sugar Shack</span><small id="subShack">Drag to peek, let go to slide</small></button>
+        <button id="btnQuick" class="big alt"><span class="bt">Quick Slide</span><small id="subQuick">Swipe all the way</small></button>
+        <button id="btnDaily" class="big daily"><span class="bt"><span id="dailyIcon" aria-hidden="true"></span>Daily Sap Run</span><small id="subDaily">One new board a day, same for everyone</small></button>
+        <div class="row">
+          <button id="btnStats" class="pill">Stats</button>
+          <button id="btnSound" class="pill">Sound: on</button>
+          <button id="btnMusic" class="pill">Music: on</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="screen hidden">
+    <div id="top">
+      <div id="bar">
+        <button id="btnMenu" class="icon" aria-label="Menu"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="4.5" height="14" rx="1.5"/><rect x="14.5" y="5" width="4.5" height="14" rx="1.5"/></svg></button>
+        <div id="modeName">Sugar Shack</div>
+        <button id="btnSnd" class="icon" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke-width="2" stroke-linecap="round"/><path class="mute" d="M16 9l5 6M21 9l-5 6" fill="none" stroke-width="2" stroke-linecap="round"/></svg></button>
+      </div>
+      <div id="stats">
+        <div class="box"><label>SCORE</label><b id="score">0</b></div>
+        <div class="box"><label id="bestLbl">BEST</label><b id="best">0</b></div>
+        <div class="box side" id="nextBox"><label>NEXT</label><canvas id="nextc"></canvas></div>
+        <button class="box side" id="btnUndo"><label>UNDO</label><b id="undoN">1</b></button>
+      </div>
+      <div id="topTile"><span class="tt">Top tile <b id="topName">-</b></span><span id="bag" aria-label="Tiles left in the bucket"><span class="bl">Bucket</span><span class="bc v1"><i>1</i><em id="bag1">4</em></span><span class="bc v2"><i>2</i><em id="bag2">4</em></span><span class="bc v3"><i>3</i><em id="bag3">4</em></span></span></div>
+    </div>
+
+    <div id="boardwrap"><div id="stage"><canvas id="board"></canvas></div></div>
+
+    <div id="foot">
+      <div id="hint"></div>
+      <div id="grade" class="hidden"><span id="gJug"></span><div class="gtxt"><div class="grow"><b id="gName">Just sap</b></div><div class="gbar"><i id="gFill"></i></div><div class="gnext" id="gNext"></div></div></div>
+      <div id="over" class="hidden">
+        <div class="over-title" id="overTitle">No more moves!</div>
+        <div class="over-score" id="overScore">0</div>
+        <div class="over-sub" id="overSub"></div>
+        <div class="over-btns">
+          <button id="btnUndoOver" class="pill hidden">Undo</button>
+          <button id="btnShare" class="pill hidden">Share</button>
+          <button id="btnAgain" class="big"><span class="bt">Play again</span></button>
+          <button id="btnHome" class="pill">Home</button>
+        </div>
+      </div>
+    </div>
+    <div id="ghost" class="hidden"><svg viewBox="0 0 64 80" aria-hidden="true"><circle cx="24" cy="16" r="14" fill="rgba(255,255,255,.28)" stroke="rgba(255,255,255,.7)" stroke-width="2"/><path d="M18 18 Q18 10 24 10 Q30 10 30 18 L30 36 Q33 32 37 33 Q41 34 41 38 Q44 35 48 36.5 Q52 38 52 42 Q55 40 58 42 Q61 44 60 50 L58 62 Q56 74 44 77 L32 77 Q24 76 20 69 L9 52 Q6 47 10 44 Q14 41 18 46 Z" fill="#fff6e4" stroke="#3b2412" stroke-width="3.5" stroke-linejoin="round"/><path d="M30 44 L30 52 M41 42 L41 52 M52 46 L52 54" stroke="rgba(59,36,18,.35)" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+  </section>
+
+  <!-- PAUSE -->
+  <div id="pause" class="overlay hidden">
+    <div class="panel">
+      <h2>Paused</h2>
+      <button id="pResume" class="big"><span class="bt">Resume</span></button>
+      <button id="pNew" class="pill wide">New game</button>
+      <div class="row">
+        <button id="pSound" class="pill">Sound: on</button>
+        <button id="pMusic" class="pill">Music: on</button>
+      </div>
+      <button id="pHome" class="pill wide">Home</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div id="statsPanel" class="overlay hidden">
+    <div class="panel wide-panel">
+      <h2>Stats</h2>
+      <div id="statsBody"></div>
+      <button id="sClose" class="big"><span class="bt">Done</span></button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+<script src="rules.js"></script>
+<script src="art.js"></script>
+<script src="audio.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
