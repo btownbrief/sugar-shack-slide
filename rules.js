@@ -22,6 +22,8 @@
   const BAG = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3];
   const BONUS_AT = 48;      // highest tile needed before bonus tiles can show up
   const BONUS_CHANCE = 1 / 21;
+  const SKIM_MAX = 2;        // Sugar Shack: skims you can hold (start with 1, earn one per new top tile from 48 up)
+  const SKIM_EARN_AT = 48;
 
   // ---------- random (state.seed is the whole rng state, so saves replay) ----------
   function rand(st) {
@@ -165,6 +167,7 @@
       mode, seed: (seed == null ? (Math.random() * 4294967296) : seed) >>> 0,
       grid: new Array(N * N).fill(null), nextId: 1, score: 0, moves: 0, merges: 0, highest: 0,
       bag: [], next: 0, nextBonus: false, spawnRoll: 0, undoUsed: false, snap: null, over: false,
+      skims: mode === 'shack' ? 1 : 0,
     };
     const cells = shuffle([...Array(N * N).keys()], st);
     const count = mode === 'quick' ? 2 : 9;
@@ -236,14 +239,29 @@
     }
     st.moves++;
     st.highest = Math.max(st.highest, maxTile(st));
+    // a new top tile of 48 or more earns a skim (Sugar Shack)
+    let earnedSkim = false;
+    if (st.mode === 'shack' && st.highest > prevHighest && st.highest >= SKIM_EARN_AT) {
+      const had = st.skims || 0; st.skims = Math.min(SKIM_MAX, had + 1); earnedSkim = st.skims > had;
+    }
     if (st.mode === 'shack') { drawNext(st); st.spawnRoll = rand(st); }
     st.score = computeScore(st);
     st.over = isOver(st);
     return {
       moved: true, dir, moves: p.moves, merges: p.merges, spawned,
       scoreDelta: st.score - scoreBefore,
-      newHighest: st.highest > prevHighest, prevHighest, over: st.over,
+      newHighest: st.highest > prevHighest, prevHighest, over: st.over, earnedSkim,
     };
+  }
+
+  /** Skim (Sugar Shack): throw away the upcoming tile and draw the next one from the deal. Costs one skim.
+   *  Uses the state's own rng, so the same seed and the same inputs always give the same board. */
+  function canSkim(st) { return st.mode === 'shack' && (st.skims || 0) > 0 && !st.over; }
+  function skim(st) {
+    if (!canSkim(st)) return false;
+    st.skims--;
+    drawNext(st);
+    return true;
   }
 
   function isOver(st) {
@@ -313,7 +331,7 @@
 
   return {
     parScore, parStep, parFromBot, PAR_W, TWISTS, newDaily,
-    N, DIRS, DIR_NAMES, BAG, BONUS_AT,
+    N, DIRS, DIR_NAMES, BAG, BONUS_AT, SKIM_MAX, SKIM_EARN_AT, skim, canSkim,
     rand, shuffle, artIndex, rank, points, mergeValue, lineCell,
     plan, previewSpawn, newGame, move, isOver, tiles, emptyCells, maxTile, computeScore,
     snapshot, canUndo, undo, tally, drawNext, drawFromBag,

@@ -96,6 +96,7 @@
     untick() { tone(520, 0.05, 'triangle', 0.045, { to: 380 }); }, // dragged back under it
     bonk() { tone(240, 0.12, 'square', 0.06, { to: 150 }); tone(480, 0.06, 'triangle', 0.04, { to: 300 }); },
     spawn() { tone(520, 0.08, 'sine', 0.06, { to: 760 }); },
+    skim() { tone(900, 0.07, 'sine', 0.05, { to: 540 }); tone(1180, 0.05, 'triangle', 0.025, { delay: 0.05 }); }, // a soft plip: the old tile goes back in the bucket
     /** merge: pitch climbs with the character rank and with combo count inside one move */
     merge(art, combo) {
       // pitched for a phone speaker: fundamentals ~520-1,750 Hz, a woody click and a soft square edge

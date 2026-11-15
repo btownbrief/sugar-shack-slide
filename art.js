@@ -485,45 +485,50 @@
       const rim = [null, ['#f2c08a', '#a8642c'], ['#ffffff', '#9fb0bc'], ['#fff6b8', '#d79a12']][ti];
       rr(c, -h + S * 0.045, -h + S * 0.045, S - S * 0.09, S - S * 0.09, r * 0.78);
       c.lineWidth = S * 0.032; c.strokeStyle = lg(c, -h, -h, h, h, [rim[0], rim[1], rim[0]]); c.stroke();
-      if (ti >= 2) { // twinkles in the corners
-        [[-0.36, -0.36, 0], [0.36, -0.3, 2.1], [-0.33, 0.12, 4.2]].forEach(q => {
-          const a = Math.max(0, Math.sin(t * 2.4 + q[2] + (o.phase || 0))); if (a < 0.05) return;
-          const x = q[0] * S, y = q[1] * S, z = S * (0.035 + 0.03 * a) * (ti === 3 ? 1.3 : 1);
-          c.save(); c.globalAlpha *= a; c.fillStyle = '#fffbe0'; c.beginPath(); c.moveTo(x, y - z); c.quadraticCurveTo(x, y, x + z, y); c.quadraticCurveTo(x, y, x, y + z); c.quadraticCurveTo(x, y, x - z, y); c.quadraticCurveTo(x, y, x, y - z); c.fill(); c.restore();
-        });
-      }
     }
-    // string hole
-    circ(c, 0, -h + S * 0.075, S * 0.022); c.fillStyle = 'rgba(59,36,18,.65)'; c.fill();
 
-    // character + face
-    const k = S * 0.315;
+    // character + face: sits fully above the plaque, still (no idle bob) so the board reads at a glance
+    const k = S * 0.25;
     c.save();
-    c.translate(0, -S * 0.12);
-    const bob = Math.sin(t * 2.2 + (o.phase || 0)) * 0.012;
-    c.scale(k * (1 + bob), k * (1 - bob));
-    drawChar(c, idx, t);
+    c.translate(0, -S * 0.21);
+    c.scale(k, k);
+    drawChar(c, idx, o.charT != null ? o.charT : t);
     drawFace(c, idx, o.fm || { mode: 'idle', t: t });
     c.restore();
 
+    // merge flash: on the card and character only; the plaque is drawn over it, so the new number is never washed out
+    if (o.flash > 0) { rr(c, -h, -h, S, S, r); c.fillStyle = 'rgba(255,255,255,' + Math.min(1, o.flash).toFixed(3) + ')'; c.fill(); }
+
     // number plaque
     const s = String(v), n = s.length;
-    const pw = Math.min(S * 0.9, S * (0.34 + n * 0.165)), ph = S * 0.275, py = h - S * 0.035 - ph;
+    // number first: a wide plaque with big digits (the number is what you plan with)
+    const pw = S * 0.88, ph = S * 0.40, py = h - S * 0.04 - ph, pr = S * 0.14;
     // plaque metal by tier, so big tiles read as big at a glance: wood -> bronze (48+) -> silver (384+) -> gold (3072+)
-    const tier = PLAQUE[tierOf(idx)];
-    rr(c, -pw / 2, py, pw, ph, ph * 0.5);
+    const tier = PLAQUE[ti];
+    rr(c, -pw / 2, py, pw, ph, pr);
     c.fillStyle = lg(c, 0, py, 0, py + ph, tier.g); c.fill();
     c.lineWidth = S * 0.025; c.strokeStyle = tier.rim; c.stroke();
-    if (tier.shine) { c.save(); rr(c, -pw / 2, py, pw, ph, ph * 0.5); c.clip(); c.fillStyle = 'rgba(255,255,255,.35)'; rr(c, -pw / 2 + ph * 0.3, py + ph * 0.1, pw - ph * 0.6, ph * 0.24, ph * 0.12); c.fill(); c.restore(); }
-    const fsz = Math.min(S * 0.245, (pw - S * 0.08) / (n * 0.56));
+    if (tier.shine) { c.save(); rr(c, -pw / 2, py, pw, ph, pr); c.clip(); c.fillStyle = 'rgba(255,255,255,.35)'; rr(c, -pw / 2 + pr * 0.6, py + ph * 0.08, pw - pr * 1.2, ph * 0.2, ph * 0.1); c.fill();
+      if (ti >= 2) { // one slow twinkle, inside the plaque only (2 s period)
+        const a = Math.max(0, Math.sin((t + (o.phase || 0)) * Math.PI)); if (a > 0.05) {
+          const x = pw * 0.36, y = py + ph * 0.3, z = S * 0.05 * a;
+          c.globalAlpha *= a; c.fillStyle = '#fffbe0'; c.beginPath(); c.moveTo(x, y - z); c.quadraticCurveTo(x, y, x + z, y); c.quadraticCurveTo(x, y, x, y + z); c.quadraticCurveTo(x, y, x - z, y); c.quadraticCurveTo(x, y, x, y - z); c.fill(); }
+      }
+      c.restore(); }
+    const fsz = Math.min(S * (n <= 2 ? 0.39 : n === 3 ? 0.34 : 0.30), (pw - S * 0.08) / (n * 0.56)); // cap height at 390x844: 22px (1-2 digits), 19px (3), 17px (4)
     c.font = fsz + 'px "Lilita One", "Baloo 2", "Arial Rounded MT Bold", system-ui, sans-serif';
     c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillStyle = tier.ink; c.fillText(s, 0, py + ph * 0.56);
+    const ty = py + ph * 0.54;
+    // a dark edge under cream digits holds them on wood and bronze; dark digits on silver/gold get a soft light edge instead
+    c.lineJoin = 'round';
+    if (ti < 2) { c.lineWidth = S * 0.06; c.strokeStyle = '#2a1608'; } else { c.lineWidth = S * 0.035; c.strokeStyle = 'rgba(255,255,240,.75)'; }
+    c.strokeText(s, 0, ty);
+    c.fillStyle = tier.ink; c.fillText(s, 0, ty);
 
     if (o.bonus) { // bonus tile: golden sparkle corner
       c.fillStyle = '#fff6b0'; c.strokeStyle = OUT; c.lineWidth = S * 0.02;
       c.beginPath();
-      for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 + t, rr_ = i % 2 ? S * 0.04 : S * 0.13; c.lineTo(h - S * 0.12 + Math.cos(a) * rr_, -h + S * 0.12 + Math.sin(a) * rr_); }
+      for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr_ = i % 2 ? S * 0.04 : S * 0.13; c.lineTo(h - S * 0.12 + Math.cos(a) * rr_, -h + S * 0.12 + Math.sin(a) * rr_); }
       c.closePath(); c.fill(); c.stroke();
     }
     c.restore();
